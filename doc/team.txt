@@ -3,3 +3,7 @@ Team "avatar" Members:
 Name: Oluwajomiloju Adebisi-Olusola
 CCID: adebisio
 GitHub username: Jmj-adebs
+
+Name: Onakeno Erivona
+CCID: onakeno
+GitHub username: Keno-003
