@@ -7,3 +7,7 @@ GitHub username: Jmj-adebs
 Name: Onakeno Erivona
 CCID: onakeno
 GitHub username: Keno-003
+
+Name: Paul Adewakun
+CCID: adewakun
+GitHub username: adeakun
