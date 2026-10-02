@@ -14,4 +14,8 @@ GitHub username: adeakun
 
 Name: Fikayo Ebyn-Ahisu
 CCID: oebynahi
-GitHub username: oebynahi
+GitHub username: oebynahi 
+
+Name: Jeremy Odei
+CCID: jkodei
+GitHub username: jeremyo4
