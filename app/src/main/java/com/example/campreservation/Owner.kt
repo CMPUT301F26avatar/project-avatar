@@ -1,8 +1,8 @@
-package com.example.campreservation
+package com.example.campreservation.model
 
 interface Owner {
     val ownerId: String
     fun loadCampsites()
-    fun registerCampsite(details: CampsiteDetails): Result<Campsite>
-    fun updateCampsite(campsiteId: String, details: CampsiteDetails): Result<Campsite>
+    fun registerCampsite(details: CampsiteDetails, onDone: (Result<Campsite>) -> Unit = {})
+    fun updateCampsite(campsiteId: String, details: CampsiteDetails, onDone: (Result<Campsite>) -> Unit = {})
 }
