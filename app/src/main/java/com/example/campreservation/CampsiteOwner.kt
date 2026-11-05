@@ -271,7 +271,7 @@ class CampsiteOwner(
         notifyViews(this)
     }
 
-    private fun reportFailure(e: Throwable) {
+    private fun reportingFailure(e: Throwable) {
         if (e is ValidationException) {
             errors = e.errors
             message = null
@@ -282,7 +282,7 @@ class CampsiteOwner(
     }
 
     private fun <T> fail(e: Throwable, onDone: (Result<T>) -> Unit) {
-        reportFailure(e)
+        reportingFailure(e)
         onDone(Result.failure(e))
     }
 
