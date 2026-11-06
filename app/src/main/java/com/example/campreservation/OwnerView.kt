@@ -37,14 +37,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.campreservation.Campsite
 import com.example.campreservation.controller.OwnerController
 import com.example.campreservation.model.Campsite
 import com.example.campreservation.model.CampsiteOwner
-import com.example.campreservation.model.Lottery
-import com.example.campreservation.model.Reservation
-import com.example.campreservation.model.ReservationFilter
-import com.example.campreservation.model.ValidationError
-import com.example.campreservation.model.WaitlistEntry
+//import com.example.campreservation.model.Lottery
+//import com.example.campreservation.model.Reservation
+//import com.example.campreservation.model.ReservationFilter
+//import com.example.campreservation.model.ValidationError
+//import com.example.campreservation.model.WaitlistEntry
 import com.example.campreservation.mvc.TView
 import java.time.LocalDate
 
@@ -53,18 +54,18 @@ class OwnerView(private val controller: OwnerController) : TView<CampsiteOwner> 
     // What the screens display. Compose redraws whenever one of these changes.
     var campsites by mutableStateOf<List<Campsite>>(emptyList())
         private set
-    var lotteries by mutableStateOf<List<Lottery>>(emptyList())
-        private set
+    //var lotteries by mutableStateOf<List<Lottery>>(emptyList())
+        //private set
     var selectedCampsite by mutableStateOf<Campsite?>(null)
         private set
     var qrPayload by mutableStateOf<String?>(null)
         private set
     var bookedDates by mutableStateOf<Set<LocalDate>>(emptySet())
         private set
-    var reservationLists by mutableStateOf<Map<ReservationFilter, List<Reservation>>>(emptyMap())
-        private set
-    var selectedLottery by mutableStateOf<Lottery?>(null)
-        private set
+    //var reservationLists by mutableStateOf<Map<ReservationFilter, List<Reservation>>>(emptyMap())
+        //private set
+    //var selectedLottery by mutableStateOf<Lottery?>(null)
+        //private set
     var waitlist by mutableStateOf<List<WaitlistEntry>>(emptyList())
         private set
     var errors by mutableStateOf<List<ValidationError>>(emptyList())
@@ -75,12 +76,12 @@ class OwnerView(private val controller: OwnerController) : TView<CampsiteOwner> 
     /** Called by the model after every state change. Copies the model's state; never modifies the model. */
     override fun update(model: CampsiteOwner) {
         campsites = model.ownedCampsites
-        lotteries = model.ownedLotteries
+        //lotteries = model.ownedLotteries
         selectedCampsite = model.selectedCampsite
         qrPayload = model.selectedQrPayload
         bookedDates = model.bookedDates
-        reservationLists = model.reservationsByFilter()
-        selectedLottery = model.selectedLottery
+        //reservationLists = model.reservationsByFilter()
+        //selectedLottery = model.selectedLottery
         waitlist = model.waitlist
         errors = model.errors
         message = model.message
@@ -100,7 +101,7 @@ class OwnerView(private val controller: OwnerController) : TView<CampsiteOwner> 
                 composable("home") {
                     MyCampsitesScreen(
                         campsites = campsites,
-                        lotteries = lotteries,
+                        //lotteries = lotteries,
                         onAdd = { controller.clearErrors.execute(); nav.navigate("campsiteForm") },
                         onManage = { id -> controller.openCampsite(id); nav.navigate("campsite") },
                         onOpenLottery = { id -> controller.openLottery(id); nav.navigate("lottery") },
@@ -133,34 +134,34 @@ class OwnerView(private val controller: OwnerController) : TView<CampsiteOwner> 
                         onBack = { nav.popBackStack() },
                     )
                 }
-                composable("lotteryForm") {
-                    LotteryFormScreen(
-                        campsites = campsites,
-                        preselectedCampsiteId = selectedCampsite?.id,
-                        existing = null,
-                        errors = errors,
-                        onSave = { form -> controller.saveLottery(form, null) { nav.popBackStack() } },
-                        onBack = { controller.clearErrors.execute(); nav.popBackStack() },
-                    )
-                }
-                composable("lotteryEdit") {
-                    LotteryFormScreen(
-                        campsites = campsites,
-                        preselectedCampsiteId = null,
-                        existing = selectedLottery,
-                        errors = errors,
-                        onSave = { form -> controller.saveLottery(form, selectedLottery?.id) { nav.popBackStack() } },
-                        onBack = { controller.clearErrors.execute(); nav.popBackStack() },
-                    )
-                }
-                composable("lottery") {
-                    LotteryManageScreen(
-                        lottery = selectedLottery,
-                        waitlist = waitlist.map { it.displayName to it.joinedAt },
-                        onEdit = { controller.clearErrors.execute(); nav.navigate("lotteryEdit") },
-                        onBack = { nav.popBackStack() },
-                    )
-                }
+//                composable("lotteryForm") {
+//                    LotteryFormScreen(
+//                        campsites = campsites,
+//                        preselectedCampsiteId = selectedCampsite?.id,
+//                        existing = null,
+//                        errors = errors,
+//                        onSave = { form -> controller.saveLottery(form, null) { nav.popBackStack() } },
+//                        onBack = { controller.clearErrors.execute(); nav.popBackStack() },
+//                    )
+//                }
+//                composable("lotteryEdit") {
+//                    LotteryFormScreen(
+//                        campsites = campsites,
+//                        preselectedCampsiteId = null,
+//                        existing = selectedLottery,
+//                        errors = errors,
+//                        onSave = { form -> controller.saveLottery(form, selectedLottery?.id) { nav.popBackStack() } },
+//                        onBack = { controller.clearErrors.execute(); nav.popBackStack() },
+//                    )
+//                }
+//                composable("lottery") {
+//                    LotteryManageScreen(
+//                        lottery = selectedLottery,
+//                        waitlist = waitlist.map { it.displayName to it.joinedAt },
+//                        onEdit = { controller.clearErrors.execute(); nav.navigate("lotteryEdit") },
+//                        onBack = { nav.popBackStack() },
+//                    )
+//                }
             }
         }
     }

@@ -14,10 +14,10 @@
  */
 package com.example.campreservation.controller
 
-import com.example.campreservation.model.CampsiteDetails
+//import com.example.campreservation.model.CampsiteDetails
 import com.example.campreservation.model.CampsiteOwner
-import com.example.campreservation.model.Location
-import com.example.campreservation.model.LotteryTerms
+//import com.example.campreservation.model.Location
+//import com.example.campreservation.model.LotteryTerms
 import com.example.campreservation.model.ValidationError
 import com.example.campreservation.model.ValidationException
 import com.example.campreservation.mvc.TCommand
@@ -119,7 +119,7 @@ class OwnerController(
     /** Reloads the owner's campsites and lotteries (used when the owner screen opens). */
     val refresh = TCommand {
         model.loadCampsites()
-        model.loadLotteries()
+        //model.loadLotteries()
     }
 
     /** Clears form errors (used when the owner leaves a form). */
@@ -132,7 +132,7 @@ class OwnerController(
     fun openCampsite(campsiteId: String) = model.selectCampsite(campsiteId)
 
     /** Owner tapped a lottery. */
-    fun openLottery(lotteryId: String) = model.selectLottery(lotteryId)
+    //fun openLottery(lotteryId: String) = model.selectLottery(lotteryId)
 
     /**
      * Owner submitted the campsite form. Registers a new campsite when [campsiteId] is null, otherwise updates
@@ -152,15 +152,15 @@ class OwnerController(
      * Owner submitted the lottery form. Creates a lottery when [lotteryId] is null, otherwise updates it.
      * [onSaved] runs only if the model accepted and saved it.
      */
-    fun saveLottery(form: LotteryForm, lotteryId: String?, onSaved: () -> Unit) {
-        form.toTerms(zone)
-            .onFailure { model.reportInputProblems((it as ValidationException).errors) }
-            .onSuccess { terms ->
-                val done: (Result<*>) -> Unit = { if (it.isSuccess) onSaved() }
-                if (lotteryId == null) model.createLottery(terms) { done(it) }
-                else model.updateLottery(lotteryId, terms) { done(it) }
-            }
-    }
+//    fun saveLottery(form: LotteryForm, lotteryId: String?, onSaved: () -> Unit) {
+//        form.toTerms(zone)
+//            .onFailure { model.reportInputProblems((it as ValidationException).errors) }
+//            .onSuccess { terms ->
+//                val done: (Result<*>) -> Unit = { if (it.isSuccess) onSaved() }
+//                if (lotteryId == null) model.createLottery(terms) { done(it) }
+//                else model.updateLottery(lotteryId, terms) { done(it) }
+//            }
+//    }
 
     companion object {
         /** Local hour at which registration closes and the draw runs. */

@@ -16,9 +16,6 @@ package com.example.campreservation.model
 
 import com.example.campreservation.Campsite
 import com.example.campreservation.CampsiteRepository
-import com.example.campreservation.data.CampsiteRepository
-import com.example.campreservation.data.LotteryRepository
-import com.example.campreservation.data.ReservationRepository
 import com.example.campreservation.mvc.TModel
 import java.time.Clock
 import java.time.Instant
