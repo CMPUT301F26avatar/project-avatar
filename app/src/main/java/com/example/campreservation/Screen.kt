@@ -1,30 +1,31 @@
 package com.example.campreservation
 
-import android.os.Bundle
-import android.widget.ImageView
-import androidx.fragment.app.Fragment
-import androidx.navigation.fragment.findNavController
-import com.bumptech.glide.Glide
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
 
-enum class UserRole { ENTRANT, OWNER, ADMIN}
-abstract class Screen : Fragment() {
+
+abstract class Screen {
 
     abstract val role: UserRole
 
-    abstract fun show()
+    var onNavigate: (String) -> Unit = {}
 
     abstract fun refresh()
 
-    fun navigate (destinationId: Int, args: Bundle? = null) {
-        findNavController().navigate(destinationId, args)
-    }
+    @Composable
+    abstract fun Content()
 
-    fun showImage(target: ImageView, url : String?) {
-        Glide.with(target)
-            .load(url)
-            .placeholder(android.R.drawable.ic_menu_gallery)
-            .error(android.R.drawable.ic_menu_gallery)
-            .centerCrop()
-            .into(target)
+    fun navigate(route: String) = onNavigate(route)
+
+    @Composable
+    fun ShowImage(url: String?, modifier: Modifier = Modifier) {
+        AsyncImage(
+            model = url,
+            contentDescription = null,
+            modifier = modifier,
+            contentScale = ContentScale.Crop
+        )
     }
 }

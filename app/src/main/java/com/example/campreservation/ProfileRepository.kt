@@ -53,6 +53,23 @@ class ProfileRepository {
         return _profiles.find { it.deviceId == deviceId }
     }
 
+    fun getOrCreateProfile(deviceId: String, callback: (Result<Profile>) -> Unit) {
+        val docRef = profilesRef.document(deviceId)
+        docRef.get()
+            .addOnSuccessListener { doc ->
+                val existing = doc.toObject(Profile::class.java)
+                if (existing != null) {
+                    callback(Result.success(existing))
+                } else {
+                    val newProfile = Profile(deviceId = deviceId) // adjust to your constructor
+                    docRef.set(newProfile)
+                        .addOnSuccessListener { callback(Result.success(newProfile)) }
+                        .addOnFailureListener { callback(Result.failure(it)) }
+                }
+            }
+            .addOnFailureListener { callback(Result.failure(it)) }
+    }
+
     init {
         profilesRef.addSnapshotListener { snapshot, error ->
             if (error != null) {
