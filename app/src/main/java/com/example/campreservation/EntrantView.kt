@@ -1,6 +1,5 @@
 package com.example.campreservation
 
-import android.util.Patterns
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -91,12 +90,7 @@ class EntrantView(
         }
     }
 
-    private fun validate(): String? {
-        if (name.isBlank()) return "Name can not be left empty"
-        if (email.isBlank()) return "Email can not be left empty"
-        if (!email.trim().matches(Regex("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"))) return "Enter a valid email address"
-        return null
-    }
+    private fun validate() = validateProfileInput(name, email)
 
     private fun save() {
         val problem = validate()
@@ -302,3 +296,10 @@ fun Campsite.toRow() = CampsiteRow(
     averageRating = 0.0,
     imageUrl = imageUrl
 )
+
+internal fun validateProfileInput(name: String, email: String): String? {
+    if (name.isBlank()) return "Name can not be left empty"
+    if (email.isBlank()) return "Email can not be left empty"
+    if (!email.trim().matches(Regex("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"))) return "Enter a valid email address"
+    return null
+}
