@@ -22,6 +22,8 @@ class CampsiteRepository(
 ) {
     private val campsites = db.collection("campsites")
 
+    fun newId(): String = campsites.document().id
+
     /** Create OR update. Using campsiteId as the document id means saving
      *  the same campsite twice overwrites it instead of duplicating it. */
     fun save(campsite: Campsite, onResult: (Result<Unit>) -> Unit) {

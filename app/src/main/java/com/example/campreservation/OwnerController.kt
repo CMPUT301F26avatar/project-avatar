@@ -1,17 +1,16 @@
 package com.example.campreservation.controller
 
 import com.example.campreservation.Campsite
-import com.example.campreservation.model.CampsiteOwner
+import com.example.campreservation.CampsiteOwner
 //import com.example.campreservation.mvc.TCommand
-import java.time.ZoneId
 
 class OwnerController(
     private val model: CampsiteOwner,
     //private val zone: ZoneId = ZoneId.systemDefault(),
 ) {
-    val refresh = TCommand { model.loadCampsites() }
-    val clearErrors = TCommand { model.clearErrors() }
-    val dismissMessage = TCommand { model.clearMessage() }
+    fun refresh() = model.loadCampsites()
+    fun clearErrors() = model.clearErrors()
+    fun dismissMessage() = model.clearMessage()
 
     fun openCampsite(campsiteId: String) = model.selectCampsite(campsiteId)
 
@@ -23,6 +22,3 @@ class OwnerController(
     }
 }
 
-fun interface TCommand {
-    fun execute()
-}
