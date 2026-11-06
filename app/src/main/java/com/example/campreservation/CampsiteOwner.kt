@@ -9,7 +9,7 @@
  *  - Model: what data is stored, what rules protect it, which methods change it, who notifies the views.
  *  - It never touches Android UI types, never knows which view is showing it, and never knows the controller.
  *
- * Collaborators: Campsite, Location, Lottery (drawn by LotterySystem, not here), Reservation, WaitlistEntry,
+ * Collaborators: Campsite, Lottery (drawn by LotterySystem, not here), Reservation, WaitlistEntry,
  * CampsiteRepository, LotteryRepository, ReservationRepository, CampsiteQr.
  */
 package com.example.campreservation.model
@@ -18,9 +18,8 @@ import com.example.campreservation.Campsite
 import com.example.campreservation.CampsiteRepository
 import com.example.campreservation.mvc.TModel
 import java.time.Clock
-import java.time.Instant
-import java.time.LocalDate
 import kotlin.collections.isNotEmpty
+import androidx.webgpu.ValidationException
 
 /**
  * A person or organization that lists campsites and runs lotteries for them.
@@ -59,7 +58,7 @@ class CampsiteOwner(
 
     /** The lottery opened on the manage screen, or null. */
     //var selectedLottery: Lottery? = null
-        //private set
+    //private set
 
     //private var allReservations: List<Reservation> = emptyList()
     private var _waitlist: List<WaitlistEntry> = emptyList()
@@ -76,12 +75,12 @@ class CampsiteOwner(
         private set
 
     /** The text inside the selected campsite's QR code (US 02.02.01). */
-    val selectedQrPayload: String? get() = selectedCampsite?.let { CampsiteQr.payload(it.id) }
+    //val selectedQrPayload: String? get() = selectedCampsite?.let { CampsiteQr.payload(it.campsiteId) }
 
     /** Nights already taken at the selected campsite by confirmed reservations (US 02.06.01). */
     //val bookedDates: Set<LocalDate>
-        //get() = allReservations.filter { it.status == ReservationStatus.CONFIRMED }
-            //.flatMap { nightsOf(it) }.toSet()
+    //get() = allReservations.filter { it.status == ReservationStatus.CONFIRMED }
+    //.flatMap { nightsOf(it) }.toSet()
 
     /** Reservations of the selected campsite for one list: active, past or cancelled (US 02.07.01 to .03). */
 //    fun reservations(filter: ReservationFilter): List<Reservation> {
@@ -108,7 +107,7 @@ class CampsiteOwner(
         campsites.byOwner(ownerId) { result ->
             result.onSuccess { list ->
                 _ownedCampsites.clear()
-                _ownedCampsites.addAll(list.sortedBy { it.details.name.lowercase() })
+                _ownedCampsites.addAll(list.sortedBy { it.campName.lowercase() })
                 notifyViews(this)
             }.onFailure { reportFailure(it) }
         }
@@ -127,15 +126,18 @@ class CampsiteOwner(
 
     // ---- campsites --------------------------------------------------------------------------------------
 
-    /** Registers a new campsite owned by this owner (US 02.01.01, 02.01.02). */
-    override fun registerCampsite(details: CampsiteDetails, onDone: (Result<Campsite>) -> Unit) {
-        val problems = validateDetails(details)
+    /**
+     * Registers a new campsite owned by this owner (US 02.01.01, 02.01.02).
+     * [draft] carries the form data; its id and owner are replaced here.
+     */
+    override fun registerCampsite(draft: Campsite, onDone: (Result<Campsite>) -> Unit) {
+        val problems = validate(draft)
         if (problems.isNotEmpty()) return fail(ValidationException(problems), onDone)
-        val campsite = Campsite(campsites.newId(), ownerId, details)
+        val campsite = draft.copy(campsiteId = campsites.newId(), ownerId = ownerId)
         campsites.save(campsite) { saved ->
             saved.onSuccess {
                 _ownedCampsites.add(campsite)
-                _ownedCampsites.sortBy { it.details.name.lowercase() }
+                _ownedCampsites.sortBy { it.campName.lowercase() }
                 succeed("Campsite saved")
                 onDone(Result.success(campsite))
             }.onFailure { fail(it, onDone) }
@@ -143,37 +145,41 @@ class CampsiteOwner(
     }
 
     /** Replaces the details of one of this owner's campsites (US 02.01.03). */
-    override fun updateCampsite(campsiteId: String, details: CampsiteDetails, onDone: (Result<Campsite>) -> Unit) {
-        val existing = _ownedCampsites.firstOrNull { it.id == campsiteId }
+    override fun updateCampsite(campsiteId: String, draft: Campsite, onDone: (Result<Campsite>) -> Unit) {
+        val existing = _ownedCampsites.firstOrNull { it.campsiteId == campsiteId }
             ?: return fail(NotOwnerException("Campsite $campsiteId is not one of your campsites"), onDone)
-        val problems = validateDetails(details)
+        val problems = validate(draft)
         if (problems.isNotEmpty()) return fail(ValidationException(problems), onDone)
-        val updated = existing.copy(details = details)
+        val updated = draft.copy(campsiteId = existing.campsiteId, ownerId = ownerId)
         campsites.save(updated) { saved ->
             saved.onSuccess {
                 _ownedCampsites[_ownedCampsites.indexOf(existing)] = updated
-                _ownedCampsites.sortBy { it.details.name.lowercase() }
-                if (selectedCampsite?.id == campsiteId) selectedCampsite = updated
+                _ownedCampsites.sortBy { it.campName.lowercase() }
+                if (selectedCampsite?.campsiteId == campsiteId) selectedCampsite = updated
                 succeed("Campsite saved")
                 onDone(Result.success(updated))
             }.onFailure { fail(it, onDone) }
         }
     }
 
-    /** Opens one campsite: sets [selectedCampsite], then loads its reservations (US 02.01.04, 02.06.01, 02.07.x). */
+    /**
+     * Opens one campsite: sets [selectedCampsite] (US 02.01.04).
+     * Loading its reservations (US 02.06.01, 02.07.x) comes back with ReservationRepository.
+     */
     fun selectCampsite(campsiteId: String, onDone: (Result<Campsite>) -> Unit = {}) {
-        val campsite = _ownedCampsites.firstOrNull { it.id == campsiteId }
+        val campsite = _ownedCampsites.firstOrNull { it.campsiteId == campsiteId }
             ?: return fail(NotOwnerException("Campsite $campsiteId is not one of your campsites"), onDone)
         selectedCampsite = campsite
-        allReservations = emptyList()
+        //allReservations = emptyList()
         notifyViews(this)
-        reservations.byCampsite(campsiteId) { result ->
-            result.onSuccess { list ->
-                allReservations = list
-                notifyViews(this)
-                onDone(Result.success(campsite))
-            }.onFailure { fail(it, onDone) }
-        }
+        onDone(Result.success(campsite))
+        //reservations.byCampsite(campsiteId) { result ->
+        //    result.onSuccess { list ->
+        //        allReservations = list
+        //        notifyViews(this)
+        //        onDone(Result.success(campsite))
+        //    }.onFailure { fail(it, onDone) }
+        //}
     }
 
     // ---- lotteries --------------------------------------------------------------------------------------
@@ -261,8 +267,8 @@ class CampsiteOwner(
     // ---- helpers ----------------------------------------------------------------------------------------
 
     /** Nights a reservation occupies: check-in up to, but not including, check-out. */
-    private fun nightsOf(r: Reservation): List<LocalDate> =
-        generateSequence(r.checkIn) { it.plusDays(1) }.takeWhile { it.isBefore(r.checkOut) }.toList()
+//    private fun nightsOf(r: Reservation): List<LocalDate> =
+//        generateSequence(r.checkIn) { it.plusDays(1) }.takeWhile { it.isBefore(r.checkOut) }.toList()
 
     private fun succeed(text: String) {
         errors = emptyList()
@@ -285,45 +291,43 @@ class CampsiteOwner(
         onDone(Result.failure(e))
     }
 
-    private fun validateDetails(d: CampsiteDetails): List<ValidationError> = buildList {
-        if (d.name.isBlank()) add(ValidationError("name", "Name is required"))
-        if (d.description.isBlank()) add(ValidationError("description", "Describe the amenities"))
-        if (d.maxOccupancy < 1) add(ValidationError("maxOccupancy", "Must be at least 1"))
-        if (d.pricePerNight < 0) add(ValidationError("pricePerNight", "Cannot be negative"))
-        if (d.location.address.isBlank()) add(ValidationError("location", "Address is required"))
-        if (d.location.latitude !in -90.0..90.0 || d.location.longitude !in -180.0..180.0) {
-            add(ValidationError("location", "Map location is out of range"))
-        }
+    /** The business rules for a campsite. The field names match the ones the form screen shows errors on. */
+    private fun validate(c: Campsite): List<ValidationError> = buildList {
+        if (c.campName.isBlank()) add(ValidationError("name", "Name is required"))
+        if (c.descr.isBlank()) add(ValidationError("description", "Describe the amenities"))
+        if (c.maxOccupancy < 1) add(ValidationError("maxOccupancy", "Must be at least 1"))
+        if (c.pricePerNight < 0) add(ValidationError("pricePerNight", "Cannot be negative"))
+        if (c.location.isBlank()) add(ValidationError("location", "Location is required"))
     }
 
     /**
      * Rules for lottery terms. [existing] is the stored lottery when updating, null when creating.
      * Once registration has opened, its start time cannot move.
      */
-    private fun validateTerms(t: LotteryTerms, existing: LotteryTerms?): List<ValidationError> = buildList {
-        val now = Instant.now(clock)
-        if (t.campsiteIds.isEmpty()) add(ValidationError("campsiteIds", "Pick at least one campsite"))
-        t.campsiteIds.filter { id -> _ownedCampsites.none { it.id == id } }.forEach {
-            add(ValidationError("campsiteIds", "Campsite $it is not one of your campsites"))
-        }
-        if (t.stayEnd.isBefore(t.stayStart)) add(ValidationError("stay", "Stay end is before stay start"))
-        if (!t.registrationEnd.isAfter(t.registrationStart)) {
-            add(ValidationError("registration", "Registration must end after it starts"))
-        }
-        if (t.bookingStart.isBefore(t.registrationEnd)) {
-            add(ValidationError("booking", "Booking cannot start before registration ends"))
-        }
-        if (!t.bookingEnd.isAfter(t.bookingStart)) add(ValidationError("booking", "Booking must end after it starts"))
-        if (t.winnerCount < 1) add(ValidationError("winnerCount", "At least 1 winner"))
-        val cap = t.waitlistCapacity
-        if (cap != null && cap < t.winnerCount) {
-            add(ValidationError("waitlistCapacity", "Capacity cannot be smaller than the number of winners"))
-        }
-        if (existing == null && !t.registrationEnd.isAfter(now)) {
-            add(ValidationError("registration", "Registration must end in the future"))
-        }
-        if (existing != null && !now.isBefore(existing.registrationStart) && t.registrationStart != existing.registrationStart) {
-            add(ValidationError("registration", "Registration already opened; its start cannot change"))
-        }
-    }
+//    private fun validateTerms(t: LotteryTerms, existing: LotteryTerms?): List<ValidationError> = buildList {
+//        val now = Instant.now(clock)
+//        if (t.campsiteIds.isEmpty()) add(ValidationError("campsiteIds", "Pick at least one campsite"))
+//        t.campsiteIds.filter { id -> _ownedCampsites.none { it.campsiteId == id } }.forEach {
+//            add(ValidationError("campsiteIds", "Campsite $it is not one of your campsites"))
+//        }
+//        if (t.stayEnd.isBefore(t.stayStart)) add(ValidationError("stay", "Stay end is before stay start"))
+//        if (!t.registrationEnd.isAfter(t.registrationStart)) {
+//            add(ValidationError("registration", "Registration must end after it starts"))
+//        }
+//        if (t.bookingStart.isBefore(t.registrationEnd)) {
+//            add(ValidationError("booking", "Booking cannot start before registration ends"))
+//        }
+//        if (!t.bookingEnd.isAfter(t.bookingStart)) add(ValidationError("booking", "Booking must end after it starts"))
+//        if (t.winnerCount < 1) add(ValidationError("winnerCount", "At least 1 winner"))
+//        val cap = t.waitlistCapacity
+//        if (cap != null && cap < t.winnerCount) {
+//            add(ValidationError("waitlistCapacity", "Capacity cannot be smaller than the number of winners"))
+//        }
+//        if (existing == null && !t.registrationEnd.isAfter(now)) {
+//            add(ValidationError("registration", "Registration must end in the future"))
+//        }
+//        if (existing != null && !now.isBefore(existing.registrationStart) && t.registrationStart != existing.registrationStart) {
+//            add(ValidationError("registration", "Registration already opened; its start cannot change"))
+//        }
+//    }
 }
