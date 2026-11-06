@@ -18,6 +18,7 @@ abstract class Screen {
     abstract fun Content()
 
     fun navigate(route: String) = onNavigate(route)
+    var onChangeRole: () -> Unit = {}
 
     @Composable
     fun ShowImage(url: String?, modifier: Modifier = Modifier) {
@@ -29,3 +30,4 @@ abstract class Screen {
         )
     }
 }
+//git push

@@ -29,7 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-
+//to push
 class EntrantView(
     private val entrant: Entrant,
     private val profiles: ProfileRepository,
@@ -45,6 +45,8 @@ class EntrantView(
     private var loading by mutableStateOf(true)
     private var message by mutableStateOf<String?>(null)
     private var confirmingDelete by mutableStateOf(false)
+    private var selected by mutableStateOf<Campsite?>(null)
+    private var campsiteById by mutableStateOf<Map<String, Campsite>>(emptyMap())
 
     private var name by mutableStateOf("")
     private var email by mutableStateOf("")
@@ -101,6 +103,7 @@ class EntrantView(
         runCatching { entrant.profile.updateInfo(name.trim(), email.trim(), phone.trim()) }
             .onSuccess {
                 entrant.profile.notificationPreference(notificationsOn)
+                entrant.profile.role = UserRole.ENTRANT.name
                 profiles.updateProfile(entrant.profile) { result ->
                     result
                         .onSuccess {
@@ -126,6 +129,7 @@ class EntrantView(
                     searched = false
                     message = "Profile deleted"
                     page = Page.PROFILE
+                    onChangeRole()
                 }
                 .onFailure { message = "Could not delete profile: ${it.message}" }
         }
@@ -133,12 +137,14 @@ class EntrantView(
 
     private fun search() {
         searching = true
-        entrant.searchCampsites(query.trim(), campsites) { result ->
+
+        entrant.searchCampsites(query.trim(), campsites, guests.toIntOrNull()) { result ->
             result
                 .onSuccess { found ->
-                    val minGuests = guests.toIntOrNull()
+                    //val minGuests = guests.toIntOrNull()
+                    //val shown = found.filter { minGuests == null || it.maxOccupancy >= minGuests }
+                    campsiteById = found.associateBy { it.campsiteId }
                     results = found.map { it.toRow() }
-                        .filter { minGuests == null || it.maxOccupancy >= minGuests }
                     searched = true
                 }
                 .onFailure { message = "Could not search campsites" }
@@ -149,6 +155,17 @@ class EntrantView(
     @Composable
     override fun Content() {
         LaunchedEffect(Unit) { load() }
+        val open = selected
+        if (open != null) {
+            CampView(
+                campsite = open, role = UserRole.ENTRANT,
+                lotteryActive = false, isOnWaitlist = false,
+                onJoinWaitlist = {}, onLeaveWaitlist = {},
+                onEditCampsite = {}, onManageLottery = {}, onRemoveCampsite = {},
+                onBack = { selected = null }
+            )
+            return
+        }
 
         Column(
             modifier = Modifier
@@ -230,7 +247,13 @@ class EntrantView(
                 onClick = { confirmingDelete = true },
                 modifier = Modifier.fillMaxWidth()
             ) { Text("Delete profile") }
+
         }
+        else {
+            OutlinedButton(
+                onClick = { onChangeRole() },
+                modifier = Modifier.fillMaxWidth()
+            ) { Text("Change role") }}
     }
 
     @Composable
@@ -263,8 +286,9 @@ class EntrantView(
     @Composable
     private fun CampsiteCard(row: CampsiteRow) {
         Card(
-            onClick = { navigate("campView/${row.id}") },
+            onClick = { selected = campsiteById[row.id] },
             modifier = Modifier.fillMaxWidth()
+
         ) {
             Row(modifier = Modifier.padding(12.dp)) {
                 ShowImage(row.imageUrl, Modifier.size(80.dp))
