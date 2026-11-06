@@ -4,10 +4,12 @@ class Entrant (
     var entrantId: String = "",
     var profile: Profile = Profile()
 ): EntrantInterface{
+
+    /**
     val reservations: MutableList<Reservation> = mutableListOf()
     val notifications: MutableList<Notification> = mutableListOf()
     val messages: MutableList<Message> = mutableListOf()
-
+    **/
     init {
         if (profile.deviceId.isBlank()) profile.deviceId = entrantId
     }
@@ -15,10 +17,11 @@ class Entrant (
     override fun searchCampsites(
                                 query: String,
                                 repository: CampsiteRepository,
+                                guests: Int?,
                                 onResult: (Result<List<Campsite>>) -> Unit )
                                 = repository.search(query, guests, onResult)
-
-    override fun viewCampsite(campsite: Campsite): CampView = Campview(campsite)
+    /**
+    override fun viewCampsite(campsite: Campsite): CampView = CampView(campsite)
 
 
     override fun joinWaitlist(waitList: WaitList): Boolean = waitList.addEntrant(entrantId)
@@ -47,7 +50,7 @@ class Entrant (
     override fun rateCampsite(rating: Rating, repository: RatingRepository) {
         repository.save(rating.copy(raterId = entrantId)){}
     }
-
+    **/
     override fun uploadProfileImage(image: Image) {
         profile.setImage(image)
     }
@@ -55,5 +58,5 @@ class Entrant (
     override fun equals(other: Any?): Boolean =
         other is Entrant && other.entrantId == entrantId
 
-    fun hashcode(): Int = entrantId.hashcode()
+    override fun hashCode(): Int = entrantId.hashcode()
 }
