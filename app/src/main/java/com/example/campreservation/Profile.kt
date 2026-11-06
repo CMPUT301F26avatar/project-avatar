@@ -1,11 +1,11 @@
 package com.example.campreservation
 
 class Profile (
-    var entrantId: String = "",
+    var deviceId: String = "",
     var name: String = "",
     var email: String = "",
     var phoneNumber: String = "",
-    var profileImage: ProfileImage? = null,
+    var profileImageUrl: String? = null,
     var notificationsEnabled: Boolean = true
 ){
 
@@ -22,12 +22,12 @@ class Profile (
 
     fun disableNotifications(): Boolean = !notificationsEnabled
 
-    fun setImage(image: ProfileImage){
-        profileImage = image
+    fun setImage(image: Image){
+        profileImageUrl = image.url
     }
 
     fun removeImage(){
-        profileImage = null
+        profileImageUrl= null
     }
 
     override fun toString(): String = "Profile(name = $name, email = $email, phone =  $phoneNumber)"
