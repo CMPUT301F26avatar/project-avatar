@@ -4,18 +4,24 @@ class Entrant (
     var entrantId: String = "",
     var profile: Profile = Profile()
 ): EntrantInterface{
+
+    /**
     val reservations: MutableList<Reservation> = mutableListOf()
     val notifications: MutableList<Notification> = mutableListOf()
     val messages: MutableList<Message> = mutableListOf()
-
+    **/
     init {
-        if (profile.entrantId.isBlank()) profile.entrantId = entrantId
+        if (profile.deviceId.isBlank()) profile.deviceId = entrantId
     }
 
-    override fun searchCampsites(query: String, repository: CampsiteRepository): List<Campsite> =
-        repository.search(query)
-
-    override fun viewCampsite(campsite: Campsite): CampView = Campview(campsite)
+    override fun searchCampsites(
+                                query: String,
+                                repository: CampsiteRepository,
+                                guests: Int?,
+                                onResult: (Result<List<Campsite>>) -> Unit )
+                                = repository.search(query, guests, onResult)
+    /**
+    override fun viewCampsite(campsite: Campsite): CampView = CampView(campsite)
 
 
     override fun joinWaitlist(waitList: WaitList): Boolean = waitList.addEntrant(entrantId)
@@ -39,18 +45,18 @@ class Entrant (
         reservations.remove(reservation)
     }
 
-    override fun scanQRCode(qrCode: QRCode): Campsite? = qrCode.campsite
+    override fun scanQRCode(qrCode: QRCode): String? = qrCode.campsiteId
 
-    override fun rateCampsite(rating: Rating){
-        rating.campsite.ratingSystem.addRating(rating)
+    override fun rateCampsite(rating: Rating, repository: RatingRepository) {
+        repository.save(rating.copy(raterId = entrantId)){}
     }
-
-    override fun uploadProfileImage(image: ProfileImage) {
+    **/
+    override fun uploadProfileImage(image: Image) {
         profile.setImage(image)
     }
 
-    override fun equals(otherEntrant: Any?): Boolean =
-        otherEntrant is Entrant && otherEntrant.entrantId == entrantId
+    override fun equals(other: Any?): Boolean =
+        other is Entrant && other.entrantId == entrantId
 
-    fun hashcode(): Int = entrantId.hashcode
+    override fun hashCode(): Int = entrantId.hashCode()
 }
