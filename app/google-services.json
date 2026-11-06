@@ -1,0 +1,31 @@
+{
+  "project_info": {
+    "project_number": "688128886412",
+    "project_id": "project-avatar-31894",
+    "storage_bucket": "project-avatar-31894.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:688128886412:android:4dc625c5505b462d85dda9",
+        "android_client_info": {
+          "package_name": "com.example.campreservation"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAG2FKzqrkQXZyihyGzAHab4jHaAqn8O_o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
+
+//idk bro testing
