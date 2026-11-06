@@ -46,6 +46,7 @@ class ProfileRepository {
     }
 
     // All profiles (admin browse)
+    @JvmName("fetchProfiles")
     fun getProfiles(): List<Profile> = _profiles
 
     // Look up one profile by device ID from the list
