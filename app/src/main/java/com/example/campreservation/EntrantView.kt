@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.ZoneOffset
-
+///
 class EntrantView : Screen() {
     override val role = UserRole.ENTRANT
 
@@ -43,6 +43,7 @@ class EntrantView : Screen() {
         loadImage = { view, url -> showImage(view, url) }
     )
 
-    #illl continue here
+    //illl continue here
 
 }
+///
