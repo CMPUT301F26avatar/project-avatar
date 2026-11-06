@@ -21,4 +21,3 @@ class OwnerController(
         else model.updateCampsite(campsiteId, draft, done)
     }
 }
-

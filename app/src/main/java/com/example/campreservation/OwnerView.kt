@@ -89,5 +89,5 @@ class OwnerView(private val controller: OwnerController){
             }
         }
     }
-    
+
 }
