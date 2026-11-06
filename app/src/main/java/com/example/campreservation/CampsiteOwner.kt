@@ -14,6 +14,8 @@
  */
 package com.example.campreservation.model
 
+import com.example.campreservation.Campsite
+import com.example.campreservation.CampsiteRepository
 import com.example.campreservation.data.CampsiteRepository
 import com.example.campreservation.data.LotteryRepository
 import com.example.campreservation.data.ReservationRepository
@@ -37,8 +39,8 @@ class CampsiteOwner(
     override val ownerId: String,
     val displayName: String,
     private val campsites: CampsiteRepository,
-    private val lotteries: LotteryRepository,
-    private val reservations: ReservationRepository,
+    //private val lotteries: LotteryRepository,
+    //private val reservations: ReservationRepository,
     private val clock: Clock = Clock.systemDefaultZone(),
 ) : TModel<CampsiteOwner>(), Owner {
 
@@ -49,20 +51,20 @@ class CampsiteOwner(
     /** Read-only snapshot of this owner's campsites, sorted by name (US 02.03.01). */
     val ownedCampsites: List<Campsite> get() = _ownedCampsites.toList()
 
-    private val _ownedLotteries = mutableListOf<Lottery>()
+    //private val _ownedLotteries = mutableListOf<Lottery>()
 
     /** Read-only snapshot of this owner's lotteries, newest registration first. */
-    val ownedLotteries: List<Lottery> get() = _ownedLotteries.toList()
+    //val ownedLotteries: List<Lottery> get() = _ownedLotteries.toList()
 
     /** The campsite opened on the overview screen (US 02.01.04), or null. */
     var selectedCampsite: Campsite? = null
         private set
 
     /** The lottery opened on the manage screen, or null. */
-    var selectedLottery: Lottery? = null
-        private set
+    //var selectedLottery: Lottery? = null
+        //private set
 
-    private var allReservations: List<Reservation> = emptyList()
+    //private var allReservations: List<Reservation> = emptyList()
     private var _waitlist: List<WaitlistEntry> = emptyList()
 
     /** Entrants on the selected lottery's waiting list, in the order they joined (US 02.09.01). */
@@ -80,27 +82,27 @@ class CampsiteOwner(
     val selectedQrPayload: String? get() = selectedCampsite?.let { CampsiteQr.payload(it.id) }
 
     /** Nights already taken at the selected campsite by confirmed reservations (US 02.06.01). */
-    val bookedDates: Set<LocalDate>
-        get() = allReservations.filter { it.status == ReservationStatus.CONFIRMED }
-            .flatMap { nightsOf(it) }.toSet()
+    //val bookedDates: Set<LocalDate>
+        //get() = allReservations.filter { it.status == ReservationStatus.CONFIRMED }
+            //.flatMap { nightsOf(it) }.toSet()
 
     /** Reservations of the selected campsite for one list: active, past or cancelled (US 02.07.01 to .03). */
-    fun reservations(filter: ReservationFilter): List<Reservation> {
-        val today = LocalDate.now(clock)
-        return when (filter) {
-            ReservationFilter.ACTIVE -> allReservations.filter {
-                it.status == ReservationStatus.CONFIRMED && !it.checkOut.isBefore(today)
-            }
-            ReservationFilter.PAST -> allReservations.filter {
-                it.status == ReservationStatus.CONFIRMED && it.checkOut.isBefore(today)
-            }
-            ReservationFilter.CANCELLED -> allReservations.filter { it.status != ReservationStatus.CONFIRMED }
-        }.sortedBy { it.checkIn }
-    }
+//    fun reservations(filter: ReservationFilter): List<Reservation> {
+//        val today = LocalDate.now(clock)
+//        return when (filter) {
+//            ReservationFilter.ACTIVE -> allReservations.filter {
+//                it.status == ReservationStatus.CONFIRMED && !it.checkOut.isBefore(today)
+//            }
+//            ReservationFilter.PAST -> allReservations.filter {
+//                it.status == ReservationStatus.CONFIRMED && it.checkOut.isBefore(today)
+//            }
+//            ReservationFilter.CANCELLED -> allReservations.filter { it.status != ReservationStatus.CONFIRMED }
+//        }.sortedBy { it.checkIn }
+//    }
 
     /** All three reservation lists at once, so a view can copy them in one go. */
-    fun reservationsByFilter(): Map<ReservationFilter, List<Reservation>> =
-        ReservationFilter.values().associateWith { reservations(it) }
+//    fun reservationsByFilter(): Map<ReservationFilter, List<Reservation>> =
+//        ReservationFilter.values().associateWith { reservations(it) }
 
     // ---- loading ----------------------------------------------------------------------------------------
 
@@ -116,15 +118,15 @@ class CampsiteOwner(
     }
 
     /** Loads this owner's lotteries from the repository into [ownedLotteries]. */
-    fun loadLotteries() {
-        lotteries.byOwner(ownerId) { result ->
-            result.onSuccess { list ->
-                _ownedLotteries.clear()
-                _ownedLotteries.addAll(list.sortedByDescending { it.terms.registrationStart })
-                notifyViews(this)
-            }.onFailure { reportFailure(it) }
-        }
-    }
+//    fun loadLotteries() {
+//        lotteries.byOwner(ownerId) { result ->
+//            result.onSuccess { list ->
+//                _ownedLotteries.clear()
+//                _ownedLotteries.addAll(list.sortedByDescending { it.terms.registrationStart })
+//                notifyViews(this)
+//            }.onFailure { reportFailure(it) }
+//        }
+//    }
 
     // ---- campsites --------------------------------------------------------------------------------------
 
@@ -180,63 +182,63 @@ class CampsiteOwner(
     // ---- lotteries --------------------------------------------------------------------------------------
 
     /** Creates a lottery listing for one or more of this owner's campsites (US 02.04.01 to .05, .07). */
-    fun createLottery(terms: LotteryTerms, onDone: (Result<Lottery>) -> Unit = {}) {
-        val problems = validateTerms(terms, existing = null)
-        if (problems.isNotEmpty()) return fail(ValidationException(problems), onDone)
-        val lottery = Lottery(lotteries.newId(), ownerId, terms, LotteryStatus.OPEN)
-        lotteries.save(lottery) { saved ->
-            saved.onSuccess {
-                _ownedLotteries.add(lottery)
-                _ownedLotteries.sortByDescending { it.terms.registrationStart }
-                succeed("Lottery saved")
-                onDone(Result.success(lottery))
-            }.onFailure { fail(it, onDone) }
-        }
-    }
+//    fun createLottery(terms: LotteryTerms, onDone: (Result<Lottery>) -> Unit = {}) {
+//        val problems = validateTerms(terms, existing = null)
+//        if (problems.isNotEmpty()) return fail(ValidationException(problems), onDone)
+//        val lottery = Lottery(lotteries.newId(), ownerId, terms, LotteryStatus.OPEN)
+//        lotteries.save(lottery) { saved ->
+//            saved.onSuccess {
+//                _ownedLotteries.add(lottery)
+//                _ownedLotteries.sortByDescending { it.terms.registrationStart }
+//                succeed("Lottery saved")
+//                onDone(Result.success(lottery))
+//            }.onFailure { fail(it, onDone) }
+//        }
+//    }
 
     /** Changes the terms of a lottery that has not been drawn yet (US 02.04.06). */
-    fun updateLottery(lotteryId: String, terms: LotteryTerms, onDone: (Result<Lottery>) -> Unit = {}) {
-        val existing = _ownedLotteries.firstOrNull { it.id == lotteryId }
-            ?: return fail(NotOwnerException("Lottery $lotteryId is not one of your lotteries"), onDone)
-        if (existing.status != LotteryStatus.OPEN) {
-            return fail(LotteryLockedException("Lottery $lotteryId was already drawn and cannot change"), onDone)
-        }
-        lotteries.waitlist(lotteryId) { waitlistResult ->
-            val onList = waitlistResult.getOrNull()?.size ?: 0
-            val problems = validateTerms(terms, existing.terms).toMutableList()
-            val cap = terms.waitlistCapacity
-            if (cap != null && cap < onList) {
-                problems += ValidationError("waitlistCapacity", "Already $onList entrants on the waiting list")
-            }
-            if (problems.isNotEmpty()) return@waitlist fail(ValidationException(problems), onDone)
-            val updated = existing.copy(terms = terms)
-            lotteries.save(updated) { saved ->
-                saved.onSuccess {
-                    _ownedLotteries[_ownedLotteries.indexOf(existing)] = updated
-                    _ownedLotteries.sortByDescending { it.terms.registrationStart }
-                    if (selectedLottery?.id == lotteryId) selectedLottery = updated
-                    succeed("Lottery saved")
-                    onDone(Result.success(updated))
-                }.onFailure { fail(it, onDone) }
-            }
-        }
-    }
+//    fun updateLottery(lotteryId: String, terms: LotteryTerms, onDone: (Result<Lottery>) -> Unit = {}) {
+//        val existing = _ownedLotteries.firstOrNull { it.id == lotteryId }
+//            ?: return fail(NotOwnerException("Lottery $lotteryId is not one of your lotteries"), onDone)
+//        if (existing.status != LotteryStatus.OPEN) {
+//            return fail(LotteryLockedException("Lottery $lotteryId was already drawn and cannot change"), onDone)
+//        }
+//        lotteries.waitlist(lotteryId) { waitlistResult ->
+//            val onList = waitlistResult.getOrNull()?.size ?: 0
+//            val problems = validateTerms(terms, existing.terms).toMutableList()
+//            val cap = terms.waitlistCapacity
+//            if (cap != null && cap < onList) {
+//                problems += ValidationError("waitlistCapacity", "Already $onList entrants on the waiting list")
+//            }
+//            if (problems.isNotEmpty()) return@waitlist fail(ValidationException(problems), onDone)
+//            val updated = existing.copy(terms = terms)
+//            lotteries.save(updated) { saved ->
+//                saved.onSuccess {
+//                    _ownedLotteries[_ownedLotteries.indexOf(existing)] = updated
+//                    _ownedLotteries.sortByDescending { it.terms.registrationStart }
+//                    if (selectedLottery?.id == lotteryId) selectedLottery = updated
+//                    succeed("Lottery saved")
+//                    onDone(Result.success(updated))
+//                }.onFailure { fail(it, onDone) }
+//            }
+//        }
+//    }
 
     /** Opens one lottery: sets [selectedLottery], then loads its waiting list (US 02.09.01). */
-    fun selectLottery(lotteryId: String, onDone: (Result<Lottery>) -> Unit = {}) {
-        val lottery = _ownedLotteries.firstOrNull { it.id == lotteryId }
-            ?: return fail(NotOwnerException("Lottery $lotteryId is not one of your lotteries"), onDone)
-        selectedLottery = lottery
-        _waitlist = emptyList()
-        notifyViews(this)
-        lotteries.waitlist(lotteryId) { result ->
-            result.onSuccess { list ->
-                _waitlist = list.sortedBy { it.joinedAt }
-                notifyViews(this)
-                onDone(Result.success(lottery))
-            }.onFailure { fail(it, onDone) }
-        }
-    }
+//    fun selectLottery(lotteryId: String, onDone: (Result<Lottery>) -> Unit = {}) {
+//        val lottery = _ownedLotteries.firstOrNull { it.id == lotteryId }
+//            ?: return fail(NotOwnerException("Lottery $lotteryId is not one of your lotteries"), onDone)
+//        selectedLottery = lottery
+//        _waitlist = emptyList()
+//        notifyViews(this)
+//        lotteries.waitlist(lotteryId) { result ->
+//            result.onSuccess { list ->
+//                _waitlist = list.sortedBy { it.joinedAt }
+//                notifyViews(this)
+//                onDone(Result.success(lottery))
+//            }.onFailure { fail(it, onDone) }
+//        }
+//    }
 
     // ---- messages and errors ----------------------------------------------------------------------------
 
@@ -271,7 +273,7 @@ class CampsiteOwner(
         notifyViews(this)
     }
 
-    private fun reportingFailure(e: Throwable) {
+    private fun reportFailure(e: Throwable) {
         if (e is ValidationException) {
             errors = e.errors
             message = null
@@ -282,7 +284,7 @@ class CampsiteOwner(
     }
 
     private fun <T> fail(e: Throwable, onDone: (Result<T>) -> Unit) {
-        reportingFailure(e)
+        reportFailure(e)
         onDone(Result.failure(e))
     }
 
