@@ -58,5 +58,5 @@ class Entrant (
     override fun equals(other: Any?): Boolean =
         other is Entrant && other.entrantId == entrantId
 
-    override fun hashCode(): Int = entrantId.hashcode()
+    override fun hashCode(): Int = entrantId.hashCode()
 }
