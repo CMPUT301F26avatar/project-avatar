@@ -16,7 +16,7 @@ class Profile (
         email = newEmail
         phoneNumber = newPhoneNumber
     }
-
+//to push
     fun notificationPreference(enabled: Boolean){
         notificationsEnabled = enabled
     }
