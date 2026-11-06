@@ -1,5 +1,6 @@
 package com.example.campreservation.view
 
+//import com.example.campreservation.model.ValidationError
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -15,13 +16,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.campreservation.Campsite
+import com.example.campreservation.CampsiteOwner
 import com.example.campreservation.controller.OwnerController
-import com.example.campreservation.model.CampsiteOwner
-import com.example.campreservation.model.ValidationError
-import com.example.campreservation.mvc.TView
-import kotlin.collections.emptyList
 
-class OwnerView(private val controller: OwnerController) : TView<CampsiteOwner> {
+class OwnerView(private val controller: OwnerController){
 
     // What the screens display. Compose redraws whenever one of these changes.
     var campsites by mutableStateOf<List<Campsite>>(emptyList())
@@ -30,16 +28,16 @@ class OwnerView(private val controller: OwnerController) : TView<CampsiteOwner> 
         private set
     var qrPayload by mutableStateOf<String?>(null)
         private set
-    var errors by mutableStateOf<List<ValidationError>>(emptyList())
+    var errors by mutableStateOf<Map<String, String>>(emptyMap())
         private set
     var message by mutableStateOf<String?>(null)
         private set
 
     /** Called by the model after every state change. Copies the model's state; never modifies the model. */
-    override fun update(model: CampsiteOwner) {
+    fun update(model: CampsiteOwner) {
         campsites = model.ownedCampsites
         selectedCampsite = model.selectedCampsite
-        qrPayload = model.selectedQrPayload
+        //qrPayload = model.selectedQrPayload
         errors = model.errors
         message = model.message
     }
@@ -49,16 +47,16 @@ class OwnerView(private val controller: OwnerController) : TView<CampsiteOwner> 
     fun Content() {
         val nav = rememberNavController()
         val snackbar = remember { SnackbarHostState() }
-        LaunchedEffect(Unit) { controller.refresh.execute() }
+        LaunchedEffect(Unit) { controller.refresh() }
         LaunchedEffect(message) {
-            message?.let { snackbar.showSnackbar(it); controller.dismissMessage.execute() }
+            message?.let { snackbar.showSnackbar(it); controller.dismissMessage() }
         }
         Scaffold(snackbarHost = { SnackbarHost(snackbar) }) { padding ->
             NavHost(nav, startDestination = "home", modifier = Modifier.padding(padding)) {
                 composable("home") {
                     MyCampsitesScreen(
                         campsites = campsites,
-                        onAdd = { controller.clearErrors.execute(); nav.navigate("campsiteForm") },
+                        onAdd = { controller.clearErrors(); nav.navigate("campsiteForm") },
                         onManage = { id -> controller.openCampsite(id); nav.navigate("campsite") },
                     )
                 }
@@ -67,7 +65,7 @@ class OwnerView(private val controller: OwnerController) : TView<CampsiteOwner> 
                         existing = null,
                         errors = errors,
                         onSave = { draft -> controller.saveCampsite(draft, null) { nav.popBackStack() } },
-                        onBack = { controller.clearErrors.execute(); nav.popBackStack() },
+                        onBack = { controller.clearErrors(); nav.popBackStack() },
                     )
                 }
                 composable("campsiteEdit") {
@@ -77,18 +75,19 @@ class OwnerView(private val controller: OwnerController) : TView<CampsiteOwner> 
                         onSave = { draft ->
                             controller.saveCampsite(draft, selectedCampsite?.campsiteId) { nav.popBackStack() }
                         },
-                        onBack = { controller.clearErrors.execute(); nav.popBackStack() },
+                        onBack = { controller.clearErrors(); nav.popBackStack() },
                     )
                 }
                 composable("campsite") {
                     CampsiteOverviewScreen(
                         campsite = selectedCampsite,
                         qrPayload = qrPayload,
-                        onEdit = { controller.clearErrors.execute(); nav.navigate("campsiteEdit") },
+                        onEdit = { controller.clearErrors(); nav.navigate("campsiteEdit") },
                         onBack = { nav.popBackStack() },
                     )
                 }
             }
         }
     }
+    
 }
