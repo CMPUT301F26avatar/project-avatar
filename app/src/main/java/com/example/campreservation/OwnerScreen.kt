@@ -153,7 +153,7 @@ class OwnerScreen(
         confirmingDelete = false
         // Take the owner's listings down too, so entrants can't find campsites nobody manages
         //campsites.getByOwner(ownerId) { result ->
-          //  result.onSuccess { list -> list.forEach { campsites.delete(it.campsiteId) {} } }
+        //  result.onSuccess { list -> list.forEach { campsites.delete(it.campsiteId) {} } }
         //}
         profiles.removeProfile(profile) { result ->
             result

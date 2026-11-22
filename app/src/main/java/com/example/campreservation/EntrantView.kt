@@ -139,7 +139,7 @@ class EntrantView(
         searching = true
 
         entrant.searchCampsites(query.trim(), campsites, guests.toIntOrNull()) { result ->
-        result
+            result
                 .onSuccess { found ->
                     //val minGuests = guests.toIntOrNull()
                     //val shown = found.filter { minGuests == null || it.maxOccupancy >= minGuests }
