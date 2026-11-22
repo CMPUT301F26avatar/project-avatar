@@ -22,14 +22,15 @@ data class Campsite ( val campsiteId: String = UUID.randomUUID().toString(), //e
             else -> null
         }
 
-        // Used by search/filter (US 01.01.01, 01.01.02)
-        fun matches(query: String, guests: Int? = null): Boolean {
-            val q = query.trim().lowercase()
-            val textMatch = q.isEmpty() ||
-                    campName.lowercase().contains(q) ||
-                    location.lowercase().contains(q) ||
-                    tags.any { it.lowercase().contains(q) }
-            val guestMatch = guests == null || guests <= maxOccupancy
-            return textMatch && guestMatch
-        }
+    // Used by search/filter (US 01.01.01, 01.01.02)
+    fun matches(query: String, guests: Int? = null, locationQuery: String = ""): Boolean {
+        fun containsAllWords(text: String, typed: String): Boolean =
+            typed.lowercase().split(Regex("\\s+")).filter { it.isNotEmpty() }
+                .all { it in text.lowercase() }
+
+        val textMatch = containsAllWords("$campName $descr ${tags.joinToString(" ")}", query)
+        val locationMatch = containsAllWords(location, locationQuery)
+        val guestMatch = guests == null || guests <= maxOccupancy
+        return textMatch && locationMatch && guestMatch
+    }
     }
