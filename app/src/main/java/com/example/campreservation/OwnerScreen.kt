@@ -134,7 +134,7 @@ class OwnerScreen(
         runCatching { profile.updateInfo(name.trim(), email.trim(), phone.trim()) }
             .onSuccess {
                 profile.notificationPreference(notificationsOn)
-                profile.role = UserRole.OWNER.name   // this is what makes the app open the owner screens next time
+                if (profile.role != UserRole.ADMIN.name) profile.role = UserRole.OWNER.name   // this is what makes the app open the owner screens next time
                 profiles.updateProfile(profile) { result ->
                     result
                         .onSuccess {

@@ -26,6 +26,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.campreservation.ui.theme.CampReservationTheme
+import com.example.campreservation.view.AdminView
+import com.example.campreservation.view.OwnerView
+
 //import com.example.campreservation.controller.OwnerController
 //import com.example.campreservation.view.OwnerView
 
@@ -90,7 +93,34 @@ fun AppRoot(deviceId: String, profiles: ProfileRepository, campsites: CampsiteRe
             screen.Content()
         }
 
-        // ENTRANT (ADMIN has no screens yet, so it also lands here)
+        role == UserRole.ADMIN -> {
+            val screen = remember {
+                val entrant = Entrant(entrantId = deviceId)
+                val entrantView = EntrantView(entrant, profiles, campsites)
+                val ownerScreen = OwnerScreen(deviceId, profiles, campsites)
+
+                val admin = Admin(
+                    adminId = deviceId,
+                    entrant = entrant,
+                    owner = CampsiteOwner(
+                        ownerId = deviceId,
+                        displayName = "Admin",      // required by your CampsiteOwner; nothing reads it yet
+                        campsites = campsites
+                    ),
+                    campsites = campsites,
+                    profileRepo = profiles,
+                    // TEMPORARY stand-in until your ImageRepository exists
+                    images = object : ImageSource {
+                        override fun getAll(onResult: (Result<List<Image>>) -> Unit) = onResult(Result.success(emptyList()))
+                        override fun delete(image: Image, onResult: (Result<Unit>) -> Unit) = onResult(Result.success(Unit))
+                    }
+                )
+                AdminView(admin, entrantView, ownerScreen).also { it.onChangeRole = { role = null } }
+            }
+            screen.Content()
+        }
+
+        // ENTRANT
         else -> {
             val screen = remember {
                 EntrantView(Entrant(entrantId = deviceId), profiles, campsites)
