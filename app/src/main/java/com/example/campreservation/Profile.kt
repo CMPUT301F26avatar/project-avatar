@@ -6,7 +6,8 @@ class Profile (
     var email: String = "",
     var phoneNumber: String = "",
     var profileImageUrl: String? = null,
-    var notificationsEnabled: Boolean = true
+    var notificationsEnabled: Boolean = true,
+    var role: String = UserRole.ENTRANT.name
 ){
 
     fun updateInfo(newName: String, newEmail: String, newPhoneNumber: String = ""){
@@ -15,7 +16,7 @@ class Profile (
         email = newEmail
         phoneNumber = newPhoneNumber
     }
-
+    //to push
     fun notificationPreference(enabled: Boolean){
         notificationsEnabled = enabled
     }

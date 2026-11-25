@@ -1,30 +1,48 @@
 package com.example.campreservation
 
-import android.os.Bundle
-import android.widget.ImageView
-import androidx.fragment.app.Fragment
-import androidx.navigation.fragment.findNavController
-import com.bumptech.glide.Glide
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
 
-enum class UserRole { ENTRANT, OWNER, ADMIN}
-abstract class Screen : Fragment() {
 
+// Screen is the base class for every screen in the app (for example EntrantView).
+// It defines what each screen must provide (a role, a refresh action, and its UI content)
+// and gives all screens shared tools for navigation, switching roles, and showing images.
+abstract class Screen {
+
+    // The kind of user this screen is for. Each subclass must set it.
     abstract val role: UserRole
 
-    abstract fun show()
+    // A callback the app sets so a screen can request navigation to another route.
+    // It does nothing by default until the app assigns a real handler.
+    var onNavigate: (String) -> Unit = {}
 
+    // Reloads whatever data the screen shows. Each subclass decides what that means.
     abstract fun refresh()
 
-    fun navigate (destinationId: Int, args: Bundle? = null) {
-        findNavController().navigate(destinationId, args)
-    }
+    // Draws the screen's UI. Each subclass must implement its own layout here.
+    @Composable
+    abstract fun Content()
 
-    fun showImage(target: ImageView, url : String?) {
-        Glide.with(target)
-            .load(url)
-            .placeholder(android.R.drawable.ic_menu_gallery)
-            .error(android.R.drawable.ic_menu_gallery)
-            .centerCrop()
-            .into(target)
+    // Convenience wrapper so screens can call navigate("route") instead of onNavigate(...).
+    fun navigate(route: String) = onNavigate(route)
+
+    // A callback the app sets so a screen can send the user back to role selection.
+    // It does nothing by default until the app assigns a real handler.
+    var onChangeRole: () -> Unit = {}
+
+    // A shared composable for loading and showing an image from a URL using Coil's
+    // AsyncImage. ContentScale.Crop fills the given size by cropping any overflow, and
+    // contentDescription is null because the image is decorative (no screen reader text).
+    @Composable
+    fun ShowImage(url: String?, modifier: Modifier = Modifier) {
+        AsyncImage(
+            model = url,
+            contentDescription = null,
+            modifier = modifier,
+            contentScale = ContentScale.Crop
+        )
     }
 }
+//git push

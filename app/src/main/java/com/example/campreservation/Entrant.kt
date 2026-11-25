@@ -20,9 +20,8 @@ class Entrant (
                                 guests: Int?,
                                 onResult: (Result<List<Campsite>>) -> Unit )
                                 = repository.search(query, guests, onResult)
-    /**
-    override fun viewCampsite(campsite: Campsite): CampView = CampView(campsite)
 
+    /**
 
     override fun joinWaitlist(waitList: WaitList): Boolean = waitList.addEntrant(entrantId)
 
@@ -36,24 +35,50 @@ class Entrant (
     fun receiveMessage(message: Message) {
         messages.add(message)
     }
-
-    override fun makeReservation(reservation: Reservation){
-        reservations.add(reservation)
-    }
-
-    override fun cancelReservation(reservation: Reservation){
-        reservations.remove(reservation)
-    }
-
     override fun scanQRCode(qrCode: QRCode): String? = qrCode.campsiteId
 
     override fun rateCampsite(rating: Rating, repository: RatingRepository) {
         repository.save(rating.copy(raterId = entrantId)){}
     }
     **/
+
+    override fun viewCampsite(
+        campsiteId: String,
+        repository: CampsiteRepository,
+        onResult: (Result<Campsite?>) -> Unit) =
+        repository.getById(campsiteId, onResult)
+
     override fun uploadProfileImage(image: Image) {
         profile.setImage(image)
     }
+
+    override fun makeReservation(
+        campsite: Campsite,
+        startDate: Long,
+        endDate: Long,
+        guests: Int,
+        repository: ReservationRepository,
+        onResult: (Result<Unit>) -> Unit
+    ){
+        val reservation = Reservation.forCampsite(campsite, entrantId, startDate, endDate, guests)
+        repository.saveIfAvailable(reservation, onResult)
+    }
+
+    override fun cancelReservation(
+        reservation: Reservation,
+        repository: ReservationRepository,
+        onResult: (Result<Unit>) -> Unit){
+        if (!reservation.isOwnedBy(entrantId)) {
+            onResult(Result.failure(IllegalArgumentException("Not your reservation")))
+            return
+        }
+        repository.cancel(reservation.reservationId, onResult)
+    }
+
+    override fun getMyReservations(
+        repository: ReservationRepository,
+        onResult: (Result<List<Reservation>>) -> Unit) =
+        repository.getByEntrant(entrantId, onResult)
 
     override fun equals(other: Any?): Boolean =
         other is Entrant && other.entrantId == entrantId

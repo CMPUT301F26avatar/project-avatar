@@ -25,16 +25,31 @@ class ProfileRepository {
     }
 
     // Update personal info
-    fun updateProfile(profile: Profile) {
+    fun updateProfile(profile: Profile, onDone: (Result<Unit>) -> Unit = {}) {
         profilesRef.document(profile.deviceId).set(profile)
-            .addOnFailureListener { Log.e(TAG, "updateProfile failed", it) }
+            .addOnSuccessListener { onDone(Result.success(Unit)) }
+            .addOnFailureListener {
+                Log.e(TAG, "updateProfile failed", it)
+                onDone(Result.failure(it))
+            }
+    }
+
+    // only write when the user saves a valid profile
+    fun findProfile(deviceId: String, callback: (Result<Profile?>) -> Unit) {
+        profilesRef.document(deviceId).get()
+            .addOnSuccessListener { doc -> callback(Result.success(doc.toObject(Profile::class.java))) }
+            .addOnFailureListener { callback(Result.failure(it)) }
     }
 
     // Delete profile and its image
-    fun removeProfile(profile: Profile) {
+    fun removeProfile(profile: Profile, onDone: (Result<Unit>) -> Unit = {}) {
         removeProfileImage(profile.deviceId)
         profilesRef.document(profile.deviceId).delete()
-            .addOnFailureListener { Log.e(TAG, "removeProfile failed", it) }
+            .addOnSuccessListener { onDone(Result.success(Unit)) }
+            .addOnFailureListener {
+                Log.e(TAG, "removeProfile failed", it)
+                onDone(Result.failure(it))
+            }
     }
 
     // Admin Feature: Remove only the image
@@ -46,11 +61,29 @@ class ProfileRepository {
     }
 
     // All profiles (admin browse)
+    @JvmName("fetchProfiles")
     fun getProfiles(): List<Profile> = _profiles
 
     // Look up one profile by device ID from the list
     fun getProfile(deviceId: String): Profile? {
         return _profiles.find { it.deviceId == deviceId }
+    }
+
+    fun getOrCreateProfile(deviceId: String, callback: (Result<Profile>) -> Unit) {
+        val docRef = profilesRef.document(deviceId)
+        docRef.get()
+            .addOnSuccessListener { doc ->
+                val existing = doc.toObject(Profile::class.java)
+                if (existing != null) {
+                    callback(Result.success(existing))
+                } else {
+                    val newProfile = Profile(deviceId = deviceId) // adjust to your constructor
+                    docRef.set(newProfile)
+                        .addOnSuccessListener { callback(Result.success(newProfile)) }
+                        .addOnFailureListener { callback(Result.failure(it)) }
+                }
+            }
+            .addOnFailureListener { callback(Result.failure(it)) }
     }
 
     init {
