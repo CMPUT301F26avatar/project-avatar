@@ -2,6 +2,7 @@ package com.example.campreservation.controller
 
 import com.example.campreservation.Campsite
 import com.example.campreservation.CampsiteOwner
+import com.example.campreservation.Lottery
 //import com.example.campreservation.mvc.TCommand
 
 class OwnerController(
@@ -12,7 +13,11 @@ class OwnerController(
     fun clearErrors() = model.clearErrors()
     fun dismissMessage() = model.clearMessage()
 
-    fun openCampsite(campsiteId: String) = model.selectCampsite(campsiteId)
+    fun openCampsite(campsiteId: String) {
+        model.selectCampsite(campsiteId) { result ->
+            if (result.isSuccess) model.loadLotteries()
+        }
+    }
 
     /** [onSaved] runs only if the model accepted and saved it. */
     fun saveCampsite(draft: Campsite, campsiteId: String?, onSaved: () -> Unit) {
@@ -20,4 +25,12 @@ class OwnerController(
         if (campsiteId == null) model.registerCampsite(draft, done)
         else model.updateCampsite(campsiteId, draft, done)
     }
+
+    fun loadLotteries() = model.loadLotteries()
+    /** [onSaved] runs only if the model accepted and published it. */
+    fun createLottery(start: String, end: String, winners: Int, onSaved: () -> Unit) {
+        model.createLottery(start, end, winners) { if (it.isSuccess) onSaved() }
+    }
+
+
 }

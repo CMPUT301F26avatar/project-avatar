@@ -15,6 +15,11 @@
 package com.example.campreservation
 
 import com.example.campreservation.model.Owner
+import com.example.campreservation.Campsite
+import com.example.campreservation.CampsiteRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 /**
  * A person or organization that lists campsites.
@@ -30,6 +35,8 @@ class CampsiteOwner(
     override val ownerId: String,
     val displayName: String,
     private val campsites: CampsiteRepository,
+    private val lotteryRepo: LotteryRepository = LotteryRepository(),
+    private val scope: CoroutineScope = CoroutineScope(Dispatchers.Main),
 ) : Owner {
 
     // ---- observers --------------------------------------------------------------------------------------
@@ -180,5 +187,45 @@ class CampsiteOwner(
         if (c.maxOccupancy < 1) put("maxOccupancy", "Must be at least 1")
         if (c.pricePerNight < 0) put("pricePerNight", "Cannot be negative")
         if (c.location.isBlank()) put("location", "Location is required")
+    }
+    // ---- lotteries --------------------------------------------------------------------------------------
+
+    private var _lotteries: List<Lottery> = emptyList()
+
+    /** Lotteries of the selected campsite, sorted by booking start. */
+    val lotteries: List<Lottery> get() = _lotteries
+
+    /** Loads the lotteries of the selected campsite. Call after [selectCampsite]. */
+    fun loadLotteries() {
+        val campsite = selectedCampsite ?: return
+        scope.launch {
+            try {
+                _lotteries = lotteryRepo.listings(campsite.campsiteId)
+                notifyViews(this@CampsiteOwner)
+            } catch (e: Exception) { reportFailure(e) }
+        }
+    }
+
+    /** Publishes a lottery for the selected campsite (US 02.04.01 to 02.04.07). Dates are YYYY-MM-DD. */
+    fun createLottery(
+        bookingStart: String, bookingEnd: String, winners: Int,
+        onDone: (Result<Lottery>) -> Unit = {}
+    ) {
+        val campsite = selectedCampsite
+            ?: return fail(IllegalStateException("Open a campsite first"), onDone)
+        if (winners < 1) return reject(mapOf("winnerCount" to "Need at least 1 winner"), onDone)
+        val lottery = try {
+            Lottery.create(lotteryRepo.newId(campsite.campsiteId), bookingStart, bookingEnd, winners)
+        } catch (e: IllegalArgumentException) {
+            return reject(mapOf("dates" to (e.message ?: "Check the dates")), onDone)
+        }
+        scope.launch {
+            try {
+                lotteryRepo.publish(campsite.campsiteId, ownerId, lottery)
+                _lotteries = (_lotteries + lottery).sortedBy { it.bookingStart }
+                succeed("Lottery published")
+                onDone(Result.success(lottery))
+            } catch (e: Exception) { fail(e, onDone) }
+        }
     }
 }
