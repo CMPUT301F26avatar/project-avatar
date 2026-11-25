@@ -1,6 +1,7 @@
 package com.example.campreservation
 
 import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
@@ -28,13 +29,26 @@ class Waitlist(
         db.runTransaction { transaction ->
             val lottery = transaction.get(listing).toObject(Lottery::class.java)
             check(lottery?.acceptsEntries(System.currentTimeMillis()) == true) { "Registration is closed" }
+            transaction.update(listing, "waitlistVersion", FieldValue.increment(1))
             transaction.set(entry, mapOf("name" to name))
         }.await()
     }
 
     /** Removes an entrant. Does nothing if the id doesn't exist. */
     suspend fun removeEntrant(id: String) {
-        collection.document(id).delete().await()
+        val entry = collection.document(id)
+        val listing = lotteryDocument
+        if (listing == null) {
+            entry.delete().await()
+            return
+        }
+        db.runTransaction { transaction ->
+            if (transaction.get(entry).exists()) {
+                check(transaction.get(listing).getBoolean("drawn") != true) { "Lottery has already been drawn" }
+                transaction.update(listing, "waitlistVersion", FieldValue.increment(1))
+                transaction.delete(entry)
+            }
+        }.await()
     }
 }
 

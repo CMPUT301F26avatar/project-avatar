@@ -9,9 +9,10 @@ data class Lottery(
     val bookingStart: String = "",
     val bookingEnd: String = "",
     val winnerCount: Int = 0,
-    val registrationClosesAt: Long = 0
+    val registrationClosesAt: Long = 0,
+    val drawn: Boolean = false
 ) {
-    fun acceptsEntries(now: Long) = now < registrationClosesAt
+    fun acceptsEntries(now: Long) = !drawn && now < registrationClosesAt
 
     companion object {
         fun create(
