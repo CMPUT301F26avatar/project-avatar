@@ -11,7 +11,7 @@ data class Location(
     val longitude: Double? = null
 ) {
 
-    // Makes the Location of a campsite: its address text plus its pin, if it has 
+    // Makes the Location of a campsite: its address text plus its pin, if it has
     constructor(campsite: Campsite) : this(campsite.location, campsite.latitude, campsite.longitude)
 
     // Returns true if the owner placed a pin on the map.
